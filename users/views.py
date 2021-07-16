@@ -69,8 +69,8 @@ def profiles(request):
     return render(request, "users/profiles.html", context)
 
 
-def userProfile(request, id):
-    profile = Profile.objects.get(id=id)
+def userProfile(request, pk):
+    profile = Profile.objects.get(id=pk)
 
     topSkills = profile.skill_set.exclude(description__exact="")
     otherSkills = profile.skill_set.filter(description="")
