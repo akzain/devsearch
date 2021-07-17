@@ -59,8 +59,8 @@ class Profile(models.Model):
     social_github = models.URLField(
         blank=True, null=True, validators=[validate_url_github]
     )
-    social_twitter = models.CharField(
-        max_length=200, blank=True, null=True, validators=[validate_url_twitter]
+    social_twitter = models.URLField(
+        blank=True, null=True, validators=[validate_url_twitter]
     )
     social_linkedin = models.CharField(
         max_length=200, blank=True, null=True, validators=[validate_url_linkedin]
@@ -76,11 +76,6 @@ class Profile(models.Model):
 
     def __str__(self):
         return str(self.username)
-
-
-
-
-
 
 
 class Skill(models.Model):

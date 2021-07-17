@@ -23,7 +23,7 @@ def createProject(request):
     form = ProjectForm()
 
     if request.method == "POST":
-        form = ProjectForm(request.POST, request.FILES)
+        form = ProjectForm(request.POST, request.FILE)
         if form.is_valid():
             rd = form.save()
             return redirect("project", pk=rd.id)
