@@ -57,18 +57,18 @@ class Profile(models.Model):
         default="profiles/user-default.png",
     )
     social_github = models.URLField(
-        blank=True, null=True, validators=[validate_url_github]
+        max_length=200, blank=True, null=True, validators=[validate_url_github]
     )
     social_twitter = models.URLField(
-        blank=True, null=True, validators=[validate_url_twitter]
+        max_length=200, blank=True, null=True, validators=[validate_url_twitter]
     )
-    social_linkedin = models.CharField(
+    social_linkedin = models.URLField(
         max_length=200, blank=True, null=True, validators=[validate_url_linkedin]
     )
-    social_youtube = models.CharField(
+    social_youtube = models.URLField(
         max_length=200, blank=True, null=True, validators=[validate_url_yt]
     )
-    social_website = models.CharField(max_length=200, blank=True, null=True)
+    social_website = models.URLField(max_length=200, blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
     id = models.UUIDField(
         default=uuid.uuid4, unique=True, primary_key=True, editable=False
