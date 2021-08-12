@@ -6,7 +6,6 @@ from django.contrib.auth.models import User
 from .forms import *
 from .models import *
 
-
 def loginUser(request):
     page = "login"
     if request.user.is_authenticated:
