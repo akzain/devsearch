@@ -1,17 +1,20 @@
+from typing import ContextManager
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.models import User
 from .forms import *
+from .utils import searchProfiles
 from .models import *
+
 
 def loginUser(request):
     page = "login"
     if request.user.is_authenticated:
         return redirect("profiles")
     if request.method == "POST":
-        username = request.POST["username"]
+        username = request.POST["username"].lower()
         password = request.POST["password"]
 
         try:
@@ -23,7 +26,7 @@ def loginUser(request):
 
         if user is not None:
             login(request, user)
-            return redirect("profiles")
+            return redirect(request.GET["next"] if "next" in request.GET else "account")
         else:
             messages.error(request, "Username or password is incorrect")
 
@@ -60,10 +63,8 @@ def registerUser(request):
 
 
 def profiles(request):
-    profiles = Profile.objects.all()
-    context = {
-        "profiles": profiles,
-    }
+    profiles, search_query = searchProfiles(request)
+    context = {"profiles": profiles, "search_query": search_query}
     return render(request, "users/profiles.html", context)
 
 
@@ -98,7 +99,7 @@ def editAccount(request):
             form.save()
             return redirect("account")
         # else:
-            # messages.error(request, "Please provide a valid email address")
+        # messages.error(request, "Please provide a valid email address")
 
     context = {"form": form}
     return render(request, "users/profile_form.html", context)
@@ -131,9 +132,69 @@ def updateSkill(request, pk):
     if request.method == "POST":
         form = CreateSkill(request.POST, instance=skill)
         if form.is_valid():
-            skill.save()
-            messages.success(request, "Skill was edited successfully")
+            skill.save(messages.success(request, "Skill was edited successfully"))
             return redirect("account")
 
     context = {"form": form}
     return render(request, "users/skill_form.html", context)
+
+
+@login_required(login_url="login")
+def deleteSkill(request, pk):
+    profile = request.user.profile
+    skill = profile.skill_set.get(id=pk)
+    if request.method == "POST":
+        skill.delete()
+        messages.success(request, "skill was deleted succesfully")
+        return redirect("account")
+    context = {"object": skill}
+    return render(request, "delete_template.html", context)
+
+
+@login_required(login_url="login")
+def inbox(request):
+    profile = request.user.profile
+    messageRequests = profile.messages.all()
+    unreadCount = messageRequests.filter(is_read=False).count()
+    context = {"messageRequests": messageRequests, "unreadCount": unreadCount}
+    return render(request, "users/inbox.html", context)
+
+
+@login_required(login_url="login")
+def viewMessage(request, pk):
+    profile = request.user.profile
+    message = profile.messages.get(id=pk)
+
+    if message.is_read == False:
+        message.is_read = True
+        message.save()
+    context = {"message": message}
+    return render(request, "users/message.html", context)
+
+
+def createMessage(request, pk):
+    recipient = Profile.objects.get(id=pk)
+
+    form = MessageForm()
+
+    try:
+        sender = request.user.profile
+    except:
+        sender = None
+
+    if request.method == "POST":
+        form = MessageForm(request.POST)
+        if form.is_valid:
+            message = form.save(commit=False)
+            message.sender = sender
+            message.recipient = recipient
+
+            if sender:
+                message.name = sender.name
+                message.email = sender.email
+            message.save()
+            messages.success(request, 'Your message was successfully sent!')
+            return redirect('user-profile', pk=recipient.id)
+
+    context = {"recipient": recipient, "form": form}
+    return render(request, "users/message_form.html", context)
